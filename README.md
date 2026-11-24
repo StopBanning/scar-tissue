@@ -1,6 +1,6 @@
 # scar-tissue
 
-Seven Claude Code skills. Each one exists because something went wrong once, and each opens with that incident. The
+Eight Claude Code skills. Each one exists because something went wrong once, and each opens with that incident. The
 rule in the skill is the scar that formed over it.
 
 These skills came from building an open-source desktop app called Locust, where several agents worked in parallel
@@ -15,6 +15,7 @@ git worktrees ("lanes"). Elsewhere in this repo, that project is just "the app".
 | [big-brother](skills/big-brother) | Calls in a fresh or stronger reviewer when stuck, before releases, and for planning | Two gaps nobody looked for sat unseen for weeks |
 | [repo-verdict](skills/repo-verdict) | A straight verdict on a repo link, for the product and for the workflow | A README benchmark for a feature missing from the public code |
 | [after-a-freeze](skills/after-a-freeze) | Recovery steps after the assistant or app freezes or restarts | Out-of-memory freezes from too many parallel builds |
+| [adhd-mode](skills/adhd-mode) | Brings decisions to a person one card at a time, each with its example | A wall of questions on a phone that nobody could answer |
 
 ## Install
 
