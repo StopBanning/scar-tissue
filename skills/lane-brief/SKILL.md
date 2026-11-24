@@ -1,36 +1,43 @@
 ---
 name: lane-brief
-description: "Use when about to start, restart or carry over a parallel agent (a lane working in its own git worktree): a new brief, a lane that stopped when the app closed or its plan ran out, a lane moving to another model, or when the person says 'start a lane', 'spin up lanes', 'restart them' or '/lane-brief'."
+description: "Use when about to start, restart or carry over a parallel agent (a lane working in its own copy of the code): a new brief, a lane that stopped when the app closed or its plan ran out, a lane moving to another model, or when the person says 'start a lane', 'spin up lanes', 'restart them' or '/lane-brief'."
 ---
 
 # Lane brief
 
-A "lane" here is one agent working in its own git worktree on its own branch.
+A "lane" here is one agent working in its own worktree (a separate working copy of the code) on its own branch (a
+separate line of work in the code's history).
 
 The incident: every lane start over two days was retyped by hand, and each retype dropped something. One lane went out
 on "account default" for its model, and the person said to pick a model on purpose. Early briefs had no title, so the
-sidebar showed ten rows that all began "You are picking up a lane...". A restarted lane nearly edited over a mutation run
-that its stopped predecessor had left running, which was still breaking lines in the folder. This is the brief, whole,
-so nothing drops.
+sidebar showed ten rows that all began "You are picking up a lane...". A restarted lane nearly edited over a mutation
+run its stopped predecessor had left going. (A mutation run, also called a break run, deliberately damages lines of code
+to see whether the tests notice.) That run was still breaking lines in the folder. This is the brief, whole, so nothing
+drops.
 
 ## Before starting it (one shell call)
-- `date`; `git -C <worktree> log --oneline -1`; `git -C <worktree> status --short | grep -v '^??'` (count dirty files).
-- `pgrep -fl <mutation runner> | grep <worktree>`: a stopped lane can leave its break run going. Note it in the brief.
-  Never start a second lane on a folder whose break run is still mutating files unless the brief says to wait for it.
-- Usage: check what the runtime's plan has left. If one runtime's weekly usage is above about 70%, run one lane on it at
-  most. An account near its short-window cap will stop mid-task; start it anyway only if the long window has room, and
-  expect a restart after the reset.
-- Build load: decide a cap on simultaneous builds and count your own merge and break runs against it. Four heavy builds
-  at once on one machine is a reasonable ceiling for a laptop-class box.
-- Files: list the files and folders this lane owns. Check that no running lane's brief lists any of them (grep the other
-  handoff files). Two lanes never own the same file. Shared files (a module index, a ledger) are touched only by adding
-  lines. (Two lanes once each wrote the same new file from scratch.)
+- Run `date`. Run `git -C <worktree> log --oneline -1` to see the latest commit (a saved change in the code's history).
+  Run `git -C <worktree> status --short | grep -v '^??'` to list changed files that are not new. Count the dirty files
+  (ones with unsaved changes).
+- Run `pgrep -fl <mutation runner> | grep <worktree>`. A stopped lane can leave its break run going, and this finds
+  any such run. Note it in the brief. Never start a second lane on a folder whose break run is still changing files,
+  unless the brief says to wait for it.
+- Usage: check what the runtime's plan has left. A runtime is the tool that runs the agent. If one runtime's weekly
+  usage is above about 70%, run one lane on it at most. An account near its short-window cap will stop mid-task. Start
+  it anyway only if the long window has room, and expect a restart after the reset.
+- Build load: decide a cap on how many builds run at the same time. Count your own merge runs and break runs against
+  it. (A merge joins one branch into another.) Four heavy builds at once on one machine is a reasonable ceiling for a
+  laptop-class box.
+- Files: list the files and folders this lane owns. Check that no running lane's brief lists any of them. Grep (search)
+  the other handoff files for each one. Two lanes never own the same file. Shared files (a module index, a ledger) are
+  touched only by adding lines. (Two lanes once each wrote the same new file from scratch.)
 
 ## Starting the conversation, every time
-- Set the runtime and an explicit model (and effort level where the runtime takes one). Never "account default".
+- Set the runtime and an explicit model. Set the effort level too where the runtime takes one. Never use "account
+  default".
 - Run it in an autonomous mode if your runner has one. If your runner cannot set the working folder as a parameter, the
   brief names the folder instead.
-- A stopped lane that was on an account with a spent plan gets a fresh conversation, not a "continue": a continued
+- A stopped lane that was on an account with a spent plan gets a fresh conversation, not a "continue". A continued
   conversation can land back on the account that ran out.
 
 ## The brief (fill in the angle brackets; keep every numbered line)
@@ -51,11 +58,13 @@ Work in <worktree> (branch <branch>, HEAD <short hash>). Do not switch branches 
 7. Never push. Reply with: the HEAD commit, `git status --short`, the test pass count and exit code as you saw them, each item's break counts, each new public function's call site, and anything left unfinished. A step that was blocked is not a pass.
 ```
 
-Optional lines, only when they apply: a command-wrapper line if you are trialling one (and never in front of the
-mutation runner or the ledger scripts), or a known stale note ("a helper may already exist in <file>: check first").
+Optional lines, only when they apply. One is a command-wrapper line, if you are trialling one. Never put a wrapper in
+front of the mutation runner or the ledger scripts. The other is a known stale note ("a helper may already exist in
+<file>: check first").
 
 ## After starting it
-- Read the first reply once after about 15 seconds: "working" is fine; a limit or setup error means start it elsewhere
-  now.
-- Add one update line to the current state note: lane, folder, conversation id, runtime and model, and why.
+- Read the first reply once after about 15 seconds. "Working" is fine. A limit or setup error means you should start
+  it elsewhere now.
+- Add one update line to the current state note. Include the lane, the folder, the conversation id, the runtime and
+  model, and why.
 - Tell the person the lane by its name and model, never by "account default".

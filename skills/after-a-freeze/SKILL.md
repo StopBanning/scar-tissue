@@ -5,45 +5,55 @@ description: "Use when the assistant or the app it runs in froze, hung, restarte
 
 # After a freeze
 
-The person watched a quick automatic restart bring things back and asked for it to become a skill, adding that any
-sessions that had been connected for remote access also had to be woken, because they do not reconnect on their own.
+The person watched a quick automatic restart bring things back and asked for it to become a skill. They added that any
+sessions connected for remote access (controlling them from a phone, say) must also be woken, because they do not
+reconnect on their own.
 
-What happens: a small watchdog script on a timer restarts the assistant when its main log has been silent for four or
-more minutes, and saves evidence in a folder per freeze. The freeze itself is almost always memory pressure: on a
-16 GB machine, too many compiles at once push the assistant and the app into swap, and both show about 0 MB resident.
+What happens: a small watchdog script on a timer restarts the assistant when its main log has been silent for four
+minutes or more. It saves evidence in a folder for each freeze. The freeze itself is almost always the
+computer running short of memory. On a 16 GB machine, too many builds (programs turning code into a runnable app) at
+once fill the memory. The computer then spills into swap (slow disk space used as emergency memory), and both the
+assistant and the app show about 0 MB in real memory.
 
 ## 1. Free the memory first
-- `sysctl vm.swapusage` (macOS); the resident size of the two apps: `ps -o rss= -p <pid>`.
-- Count builds by lane: for each `pgrep -f "<build tool> (test|build)"`, read its working directory with
-  `lsof -a -p <pid> -d cwd -Fn`.
-- If you run a build gate (a compiler wrapper that lets only a few heavy compiles run at once machine-wide), check it is
-  still set and read its log. Still keep a cap on lanes building (four is a reasonable number), and count your own break
-  runs as lanes. Stop the newest lanes first through the lane runner. If the runner does not answer, end those lanes'
-  build trees directly (`pkill -TERM -P <build pid>; kill -TERM <build pid>`). Never quit the app yourself: every lane
-  runs inside it.
+- `sysctl vm.swapusage` shows how much swap is in use (macOS). `ps -o rss= -p <pid>` shows how much real memory one
+  process (a running program) uses.
+- Count the builds for each lane (one agent working in its own copy of the code). For each build, run
+  `pgrep -f "<build tool> (test|build)"` to list the running ones. Then run `lsof -a -p <pid> -d cwd -Fn` to see which
+  folder each one runs in.
+- You may have a build gate: a compiler wrapper that lets only a few heavy builds run at once across the whole machine.
+  If so, check it is still switched on and read its log. Still keep your own cap on how many lanes build at once. Four
+  is a reasonable number. Count your own break runs (test runs that deliberately damage code to see if tests notice) as
+  lanes. Stop the newest lanes first, using the lane runner (the tool that starts and stops lanes). If the runner does
+  not answer, end those lanes' builds directly with `pkill -TERM -P <build pid>; kill -TERM <build pid>`. Never quit the app yourself: every lane runs
+  inside it.
 
 ## 2. Wake every remotely connected session
-After an assistant restart only the session that resumes reconnects. The rest stay off.
-- Find which were on (your session list shows an active flag), and keep a short list of the ones that are usually on.
-- For each that is off, send it one line: `Reconnect wake-up after the assistant was restarted at <time>: reply with
-  just "ok" and do nothing else.` A session must run a turn before remote access can connect.
-- Then switch remote access on for that session. If a hook changes the call's input, send the call again with exactly the
-  input it quotes. Confirm with the session list that each shows active.
-- Update your list when the person turns one on or off.
+After the assistant restarts, only the session that resumes reconnects. The rest stay off.
+- Find which sessions were on. Your session list shows an active flag. Keep a short list of the ones usually on.
+- Send each session that is off one line: `Reconnect wake-up after the assistant was restarted at <time>: reply with
+  just "ok" and do nothing else.` A session must run one turn before remote access can connect.
+- Then switch remote access on for that session. A hook (a small automatic check) may change the call's input. If it
+  does, send the call again with exactly the input the hook quotes. Check the session list to confirm each session now
+  shows active.
+- Update your list whenever the person turns one on or off.
 
 ## 2b. Scheduled jobs died with the restart
-Scheduled jobs created inside a session live only in that session. After a restart, message each session that keeps jobs
-and ask it to list and recreate them from its saved job file; check this chat's own list too.
+Scheduled jobs created inside a session live only as long as that session. After a restart, message each session that
+keeps jobs. Ask it to list them and recreate them from its saved job file. Check this chat's own list too.
 
 ## 3. App frozen or quit
-- Frozen, not quit: sample its main process (`sample <pid> 2`). An idle main thread means it is paging back in: give it a
-  minute after memory is freed. If the window stays frozen, reload only the window (Cmd+R) and do not quit and reopen:
-  on one occasion a full restart (new main pid) ended every lane. Tell a reload from a restart by the main process's
-  start time (`ps -o lstart= -p <pid>`).
-- Quit (by the person or a crash): every lane in it ended; committed work is safe in each folder. Reopen the app, wait
-  until its lane runner answers, then restart the lanes as fresh conversations, at most four building, each told: "an
-  earlier run stopped when the app was quit; read your uncommitted edits first and keep what is right." Continuing an
-  old conversation can land on an account whose plan is spent: start fresh ones.
+- **Frozen, not quit:** sample its main process with `sample <pid> 2`, which records what the program is doing for two
+  seconds. If the main thread is idle, the app is paging back in (loading itself back from disk). Give it a minute
+  after you free memory. If the window stays frozen, reload only the window (Cmd+R). Do not quit and reopen the app. On
+  one occasion a full restart (the main process got a new pid, its process number) ended every lane. To tell a reload
+  from a restart, check the main process's start time with `ps -o lstart= -p <pid>`.
+- **Quit (by the person or a crash):** every lane inside it ended. Committed work (changes saved into the code's
+  history) is safe in each lane's folder. Reopen the app and wait until its lane runner answers. Then restart the lanes
+  as fresh conversations, at most four building at once. Tell each one: "an earlier run stopped when the app was
+  quit; read your uncommitted edits first and keep what is right." Do not continue an old conversation: it can land
+  back on an account whose plan is used up.
 
 ## 4. Tell the person in a few lines
-What froze and why (the swap number), which sessions are back, which lanes were restarted and which wait for room.
+Say what froze and why (give the swap number). Say which sessions are back. Say which lanes you restarted and which
+are waiting for room.
