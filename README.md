@@ -1,6 +1,6 @@
 # scar-tissue
 
-Eight rulebooks for an AI assistant, each written right after something went wrong.
+Nine rulebooks for an AI assistant, each written right after something went wrong.
 
 ## What this is, in plain words
 
@@ -14,7 +14,7 @@ rules that stop it happening again. The mistake is the wound; the rule is the sc
 They came from building an open-source desktop app called Locust, where one assistant ran several AI agents at once,
 each building a different piece of the app in its own copy of the code (a "lane"). The skills call it "the app".
 
-## The eight skills
+## The nine skills
 
 | Skill | What it makes the assistant do | The mistake behind it |
 |---|---|---|
@@ -26,6 +26,7 @@ each building a different piece of the app in its own copy of the code (a "lane"
 | [big-brother](skills/big-brother) | Ask a fresh, stronger reviewer for help when stuck, and before every release | Two gaps sat unnoticed for weeks because nobody thought to look |
 | [repo-verdict](skills/repo-verdict) | Give a straight answer on a project someone links: useful, interesting, or skip | A project bragged about a speed-up that wasn't in its public code |
 | [after-a-freeze](skills/after-a-freeze) | Recover cleanly after the computer runs out of memory and things freeze | Too many programs building at once froze the whole machine |
+| [be-curious](skills/be-curious) | Re-test an old "that can't be done" against today's versions before repeating it | Two "impossible"s from two-month-old notes turned out to be possible after twenty minutes of looking |
 
 ## Using one
 
